@@ -39,7 +39,7 @@ function findMoves(square, size) {
     row += combination[0];
     column += combination[1];
     if (row > size - 1 || row < 0 || column > size - 1 || column < 0) {
-      console.log(`The combination [${row}, ${column}] is illegal!`);
+      continue;
     } else {
       moves.push([row, column]);
     }
@@ -58,6 +58,38 @@ function findAllMoves(board, size) {
   return allMoves;
 }
 
+// Check an array of moves for the presence of the ending square
+function isFound(array, endingSquare) {
+  if (
+    array.find(
+      (square) => square[0] === endingSquare[0] && square[1] === endingSquare[1]
+    ) === undefined
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function knightMoves(startingSquare, endingSquare, size) {
+  let moves = 0;
+  let queue = findMoves(startingSquare, size);
+  while (queue.length > 0) {
+    const currentSquare = queue.shift();
+    console.log(currentSquare);
+    const combinations = findMoves(currentSquare, size);
+    for (const combination of combinations) {
+      queue.push(combination);
+    }
+    if (isFound(queue, endingSquare)) {
+      console.log('Got ya!');
+      break;
+    }
+  }
+}
+
 const board = createBoard(BOARD_SIZE);
-const allMoves = findAllMoves(board, BOARD_SIZE);
-console.log(allMoves);
+// console.log(board);
+// const allMoves = findAllMoves(board, BOARD_SIZE);
+const found = board.find((square) => square[0] === 7 && square[1] === 1);
+
+knightMoves([0, 0], [7, 7], BOARD_SIZE);
