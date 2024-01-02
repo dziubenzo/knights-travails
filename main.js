@@ -49,5 +49,15 @@ function findMoves(square, size) {
   return moves;
 }
 
+// Create an array with moves for all squares
+function findAllMoves(board, size) {
+  let allMoves = [];
+  for (square of board) {
+    allMoves.push(findMoves([square[0], square[1]], size));
+  }
+  return allMoves;
+}
+
 const board = createBoard(BOARD_SIZE);
-console.log(findMoves([0, 0], BOARD_SIZE));
+const allMoves = findAllMoves(board, BOARD_SIZE);
+console.log(allMoves);
