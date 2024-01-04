@@ -1,7 +1,56 @@
 const BOARD_SIZE = 8;
 
+class Tree {
+  constructor(parent, value, combinations) {
+    this.parent = parent;
+    this.value = value;
+    let counter = 0;
+    for (const combination of combinations) {
+      counter++;
+      this[`branch${counter}`] = combination;
+    }
+  }
+
+  createBranches(tree = this, endingSquare, queue = []) {
+    if (
+      tree.value[0] === endingSquare[0] &&
+      tree.value[1] === endingSquare[1]
+    ) {
+      return tree.parent;
+    }
+    for (let branch = 1; branch <= 8; branch++) {
+      if (tree[`branch${branch}`] === undefined) {
+        break;
+      }
+      const parent = tree.value;
+      const value = tree[`branch${branch}`];
+      const combinations = findMoves(value, BOARD_SIZE);
+      tree[`branch${branch}`] = new Tree(parent, value, combinations);
+      // Make sure only unique values are added to the queue
+      if (!isFound(queue, tree[`branch${branch}`].value)) {
+        queue.push(tree[`branch${branch}`]);
+      }
+    }
+    const parent = this.createBranches(queue.shift(), endingSquare, queue);
+    return parent;
+  }
+
+  static findShortestPath(startingSquare, endingSquare) {
+    let path = [];
+    let square = endingSquare;
+    path.push(square);
+    while (true) {
+      if (square[0] === startingSquare[0] && square[1] === startingSquare[1]) {
+        return path;
+      }
+      let tree = new Tree(null, startingSquare, findMoves(startingSquare, BOARD_SIZE))
+      square = tree.createBranches(tree, square);
+      path.push(square);
+    };
+  }
+}
+
 // Create the board as an array of coordinates
-// Default board size is 8 x 8
 function createBoard(size) {
   let array = [];
   let row = 0;
@@ -31,38 +80,25 @@ function findMoves(square, size) {
     [1, -2],
     [2, -1],
   ];
-  let row = square[0];
-  let column = square[1];
   let moves = [];
   // Check if the combination is legal
-  for (let combination of combinations) {
-    row += combination[0];
-    column += combination[1];
+  for (const combination of combinations) {
+    let row = square[0] + combination[0];
+    let column = square[1] + combination[1];
     if (row > size - 1 || row < 0 || column > size - 1 || column < 0) {
       continue;
-    } else {
-      moves.push([row, column]);
     }
-    row = square[0];
-    column = square[1];
+    moves.push([row, column]);
   }
   return moves;
 }
 
-// Create an array with moves for all squares
-function findAllMoves(board, size) {
-  let allMoves = [];
-  for (square of board) {
-    allMoves.push(findMoves([square[0], square[1]], size));
-  }
-  return allMoves;
-}
-
-// Check an array of moves for the presence of the ending square
-function isFound(array, endingSquare) {
+// Check an array of trees for the presence of a square
+function isFound(array, squareToFind) {
   if (
     array.find(
-      (square) => square[0] === endingSquare[0] && square[1] === endingSquare[1]
+      (tree) =>
+        tree.value[0] === squareToFind[0] && tree.value[1] === squareToFind[1]
     ) === undefined
   ) {
     return false;
@@ -71,25 +107,61 @@ function isFound(array, endingSquare) {
 }
 
 function knightMoves(startingSquare, endingSquare, size) {
-  let moves = 0;
   let queue = findMoves(startingSquare, size);
+  let visitedCombinations = [];
+  let array = [];
   while (queue.length > 0) {
-    const currentSquare = queue.shift();
-    console.log(currentSquare);
-    const combinations = findMoves(currentSquare, size);
-    for (const combination of combinations) {
-      queue.push(combination);
-    }
     if (isFound(queue, endingSquare)) {
-      console.log('Got ya!');
-      break;
+      console.log(visitedCombinations);
+      return 'done';
+      // let traverseBack = endingSquare;
+      // array.push(endingSquare);
+      // console.log(visitedCombinations);
+      // while (
+      //   traverseBack[0] !== startingSquare[0] ||
+      //   traverseBack[1] !== startingSquare[1]
+      // ) {
+      //   const combinations = findMoves(traverseBack, size);
+      //   for (const combination of combinations) {
+      //     if (
+      //       isFound(visitedCombinations, combination) ||
+      //       (combination[0] === startingSquare[0] &&
+      //         combination[1] === startingSquare[1])
+      //     ) {
+      //       traverseBack = combination;
+      //       const index = visitedCombinations.indexOf(combination);
+      //       visitedCombinations.splice(index, 1);
+      //       if (!isFound(array, traverseBack)) {
+      //         array.push(traverseBack);
+      //       }
+      //       break;
+      //     }
+      //   }
+      // }
+      // queue = [];
+      // return array;
+    }
+    const currentSquare = queue.shift();
+    visitedCombinations.push(currentSquare);
+    const combinations = findMoves(currentSquare, size);
+    // console.log(new Node(startingSquare, currentSquare, combinations));
+    for (const combination of combinations) {
+      if (!isFound(queue, combination)) {
+        queue.push(combination);
+      }
+      // queue.push(combination);
     }
   }
+  return array;
 }
 
 const board = createBoard(BOARD_SIZE);
 // console.log(board);
-// const allMoves = findAllMoves(board, BOARD_SIZE);
-const found = board.find((square) => square[0] === 7 && square[1] === 1);
+// const moves = findMoves([0, 6], BOARD_SIZE);
+// console.log(moves);
 
-knightMoves([0, 0], [7, 7], BOARD_SIZE);
+const startingSquare = [0, 0];
+const endingSquare = [3, 3];
+console.log(Tree.findShortestPath(startingSquare, endingSquare));
+
+// console.log(knightMoves([0, 0], [7, 7], BOARD_SIZE));
